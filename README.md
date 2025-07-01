@@ -56,7 +56,3 @@ Made with ❤️ by **sa8ya**
 
 ```
 
----
-
-Let me know if you want a version in Hindi, Markdown with emoji, or a logo badge added.
-```
