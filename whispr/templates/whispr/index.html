@@ -1,0 +1,129 @@
+{% extends 'whispr/base.html' %}
+{% block title %}Chatverse - Rooms{% endblock %}
+
+{% block content %}
+
+<!-- Main Heading -->
+<h1 style="
+    color: #93140d;
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    text-shadow: 0 0 10px #fecf99;
+    text-align: center;
+">
+    🚀 Welcome to Chatverse
+</h1>
+
+<!-- Create Room Form -->
+<form method="POST" action="{% url 'create_room' %}" style="margin-bottom: 3rem;">
+    {% csrf_token %}
+    <div style="
+        background: rgba(255, 248, 240, 0.07);
+        backdrop-filter: blur(10px);
+        padding: 1rem;
+        border-radius: 12px;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+        max-width: 600px;
+        margin: auto;
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+        justify-content: center;
+        flex-wrap: wrap;
+    ">
+        <input
+            type="text"
+            name="room_name"
+            placeholder="Create a new room..."
+            required
+            style="padding: 0.7rem 1rem; width: 60%; min-width: 250px;
+                    border-radius: 8px; border: none;
+                    font-size: 1rem;"
+        >
+        <button type="submit" class="btn" style="
+            padding: 0.7rem 1.5rem;
+            font-size: 1rem;
+            background: #93140d;
+            border-radius: 8px;
+            color: #fff8f0;
+            transition: all 0.3s ease;
+        " onmouseover="this.style.backgroundColor='#4b648d'"
+        onmouseout="this.style.backgroundColor='#93140d'">
+            + Create Room
+        </button>
+    </div>
+</form>
+
+<!-- Section Title -->
+<h2 style="color: #93140d; font-size: 1.8rem; margin-bottom: 1rem;">💬 Available Chat Rooms</h2>
+
+<!-- Room Cards -->
+<style>
+    .room-card {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        background: rgba(255, 248, 240, 0.1);
+        backdrop-filter: blur(6px);
+        padding: 1rem 1.2rem;
+        border-radius: 10px;
+        color: #fecf99;
+        font-weight: 600;
+        text-decoration: none;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .room-card:hover {
+        transform: translateY(-5px) scale(1.02);
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .room-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -75%;
+        width: 50%;
+        height: 100%;
+        background: linear-gradient(
+            120deg,
+            rgba(255, 255, 255, 0.2) 0%,
+            rgba(255, 255, 255, 0.1) 50%,
+            rgba(255, 255, 255, 0.0) 100%
+        );
+        transform: skewX(-20deg);
+    }
+
+    .room-card:hover::before {
+        animation: shine 1s ease forwards;
+    }
+
+    @keyframes shine {
+        0% {
+            left: -75%;
+        }
+        100% {
+            left: 125%;
+        }
+    }
+</style>
+
+<div style="
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 1.5rem;
+">
+    {% for chatroom in chatrooms %}
+        <a href="{% url 'chatroom' chatroom.slug %}" class="room-card">
+            🛰️ {{ chatroom.name }}
+        </a>
+    {% empty %}
+        <p style="color: #888; margin-top: 1rem;">No rooms yet. Be the first to create one!</p>
+    {% endfor %}
+</div>
+
+{% endblock %}

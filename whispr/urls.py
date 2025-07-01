@@ -1,0 +1,11 @@
+from django.contrib import admin
+from django.urls import path, include
+from . import views
+
+urlpatterns = [
+    path('', views.index, name='index'),
+    path('<slug:slug>/', views.chatroom, name='chatroom'),
+    path('rooms/create-room/', views.create_room, name='create_room'),
+
+
+]

@@ -1,0 +1,122 @@
+{% extends 'whispr/base.html' %}
+{% block title %}Chat - {{ chatroom.name }}{% endblock %}
+
+{% block content %}
+<a href="{% url 'index' %}" style="
+    display: inline-block;
+    margin-bottom: 1rem;
+    color: #fecf99;
+    font-weight: 600;
+    text-decoration: none;
+    background-color: #93140d;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    transition: background 0.3s ease;
+" onmouseover="this.style.backgroundColor='#4b648d'" onmouseout="this.style.backgroundColor='#93140d'">
+    ← Back to Rooms
+</a>
+
+<h1 style="font-size: 2rem; color: #93140d; text-shadow: 0 0 10px #fecf99;">🛰️ Room: {{ chatroom.name }}</h1>
+<p><strong style="color: #b9e4f4;">User:</strong> <span style="color: #fff;">{{ request.user.username }}</span></p>
+
+<!-- Chat Log -->
+<div style="
+    background: rgba(255, 248, 240, 0.07);
+    backdrop-filter: blur(6px);
+    border-radius: 10px;
+    padding: 1rem;
+    border: 1px solid #b9b9b9;
+    margin: 1.5rem 0;
+    max-height: 320px;
+    overflow-y: auto;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+">
+    <ul id="chat-log" style="list-style: none; padding: 0; margin: 0;">
+        {% for message in messages %}
+            <li style="margin-bottom: 0.6rem;">
+                <strong style="color: #93140d;">{{ message.user.username }}</strong>:
+                <span style="color: #fff8f0;">{{ message.message_content }}</span>
+                <small style="color: #ccc;">({{ message.date|date:"H:i:s" }})</small>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<!-- Active Users -->
+<div id="user-status" style="margin-bottom: 1rem; color: #00cc66; font-weight: bold;"></div>
+
+<!-- Message Input -->
+<form method="post" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    {% csrf_token %}
+    <input
+        id="message-input"
+        type="text"
+        name="message"
+        placeholder="Type your message..."
+        autocomplete="off"
+        style="flex: 1 1 70%; padding: 0.7rem; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem;"
+    >
+    <button id="send-button" type="submit" class="btn" style="
+        background-color: #93140d;
+        color: #fff8f0;
+        border: none;
+        padding: 0.7rem 1.2rem;
+        border-radius: 8px;
+        font-size: 1rem;
+        transition: background-color 0.3s ease;
+    " onmouseover="this.style.backgroundColor='#4b648d'" onmouseout="this.style.backgroundColor='#93140d'">
+        Send
+    </button>
+</form>
+
+<!-- JavaScript Data -->
+{{ chatroom.slug|json_script:"json-chatroomname" }}
+{{ request.user.username|json_script:"json-username" }}
+
+<script>
+    const chatRoomName = JSON.parse(document.getElementById('json-chatroomname').textContent);
+    const username = JSON.parse(document.getElementById('json-username').textContent);
+    const chatSocket = new WebSocket('ws://' + window.location.host + '/ws/' + chatRoomName + '/');
+
+    const chatLog = document.getElementById('chat-log');
+    const userStatus = document.getElementById('user-status');
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const item = document.createElement('li');
+
+        if (data.type === 'chat_message') {
+            item.innerHTML = `<strong style="color:#93140d;">${data.username}</strong>: <span style="color:#fff8f0;">${data.message}</span> <small style="color:#ccc;">(${new Date().toLocaleTimeString()})</small>`;
+            chatLog.appendChild(item);
+            chatLog.scrollTop = chatLog.scrollHeight;
+        }
+
+        if (data.type === 'notification') {
+            userStatus.textContent = data.message;
+            setTimeout(() => {
+                userStatus.textContent = '';
+            }, 3000);
+        }
+    };
+
+    chatSocket.onclose = function(e) {
+        console.error('WebSocket closed unexpectedly');
+    };
+
+    document.getElementById('send-button').onclick = function(e) {
+        e.preventDefault();
+        const messageInput = document.getElementById('message-input');
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        chatSocket.send(JSON.stringify({
+            'type': 'chat_message',
+            'message': message,
+            'username': username,
+            'room': chatRoomName
+        }));
+
+        messageInput.value = '';
+    };
+</script>
+{% endblock %}
